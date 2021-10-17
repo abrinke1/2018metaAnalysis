@@ -29,7 +29,7 @@ baserefdir = 'rootfiles/ref/'
 datadirs = [basedatadir + i for i in os.listdir(basedatadir)]
 refdirs = [baserefdir + i for i in os.listdir(baserefdir)]
 #datadirs = [baserefdir + i for i in os.listdir(baserefdir)]
-data_path = 'rootfiles/ref/DQM_V0001_L1T_R000320006.root'
+data_path = 'rootfiles/data/DQM_V0001_L1T_R000320008.root'
 ref_path = 'rootfiles/ref/DQM_V0001_L1T_R000320006.root'
 config_dir = '../config'
 subsystem = 'EMTF'
@@ -113,7 +113,7 @@ def makePlot(histdf, y, x, ybins, xlabel, ylabel, title, plotname):
         ax.set_title(title)
         textstr = generateLabel(df=histdf, y=y, x=x)
         ax.text(1.25*max(histdf[x]), logybins[15], textstr, bbox=props)
-        plt.savefig(f'{plotdir}/{plotname}-scaleref-chi2.png', bbox_inches='tight')
+        plt.savefig(f'{plotdir}/{plotname}-scaledata-chi2.png', bbox_inches='tight')
         plt.show()
         plt.close(fig)
     else: 
@@ -152,7 +152,7 @@ def makePlot(histdf, y, x, ybins, xlabel, ylabel, title, plotname):
         #ax.set_yticklabels(ybinlabels)
         textstr = generateLabel(df=histdf, y=y, x=x)
         ax.text(1.25*max(histdf[x]), logybins[9], textstr, bbox=props)
-        plt.savefig(f'{plotdir}/{plotname}-scaleref-chi2.png', bbox_inches='tight')
+        plt.savefig(f'{plotdir}/{plotname}-scaledata-chi2.png', bbox_inches='tight')
         plt.show()
         plt.close(fig)
     #%%
@@ -194,11 +194,16 @@ pulls2d = list()
 data_run = data_path[-11:-5]
 print(f'ref path: {ref_path}')
 print(f'data path: {data_path}')
+import time
+start = time.time()
 results = compare_hists.process(config_dir, subsystem,
                                 data_series, data_sample, data_run, data_path,
                                 ref_series, ref_sample, ref_run, ref_path,
                                 ref_list, ref_runs_list,
                                 output_dir='./out/', plugin_dir='/home/chosila/Projects/2018metaAnalysis/plugins')
+end = time.time()
+print('time taken: ', end-start)
+
 
 for result in results:
     hists = result['hists']
@@ -466,20 +471,21 @@ for i,x in enumerate(histnames2d):
         fig.colorbar(im)
         ax.set_title(x)
         os.makedirs(f'{plotdir}/pulls2d', exist_ok=True)
-        fig.savefig(f'{plotdir}/pulls2d/{x}-scaleref-chi2.png', bbox_inches='tight')
+        fig.savefig(f'{plotdir}/pulls2d/{x}-scaledata-chi2.png', bbox_inches='tight')
         plt.show()
         plt.close('all')
-                                                                                                                                           
+                   #%%                                                                                                                        
 for i,x in enumerate(histnames1d):
     if True:#x == 'rpcHitPhiREPos42': 
         histvals = pulls1d[i][0]
         histedge = pulls1d[i][1]
         xedges = getBinCenter(histedge)
         fig, ax = plt.subplots()
-        ax.bar(xedges, histvals)
+        width = histedge[1] - histedge[0]
+        ax.bar(xedges, histvals, width)
         ax.set_title(x)
         os.makedirs(f'{plotdir}/pulls1d', exist_ok=True)
-        fig.savefig(f'{plotdir}/pulls1d/{x}-scaleref-chi2.png', bbox_inches='tight')
+        fig.savefig(f'{plotdir}/pulls1d/{x}-scaledata-chi2.png', bbox_inches='tight')
         plt.show()
         plt.close('all')
         

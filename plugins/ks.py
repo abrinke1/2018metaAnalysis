@@ -25,13 +25,13 @@ def ks(histpair, ks_cut=0.09, min_entries=100000, **kwargs):
 
 
     data_hist = histpair.data_hist
-    ref_hists_list = [x.values for x in histpair.ref_hists_list]
+    ref_hist_list = [x.values*data_hist.values.sum()/x.values.sum() for x in histpair.ref_hists_list]
     #ref_hists_list = [x.values for x in histpair.ref_hists_list]
 
     # check for 1d hists and that refs are not empty
     if "1" not in str(type(data_hist)) :
         return None
-    for i in ref_hists_list:
+    for i in ref_hist_list:
         if i.sum() == 0:
             return None
     if data_hist.values.sum() == 0: 
@@ -40,20 +40,20 @@ def ks(histpair, ks_cut=0.09, min_entries=100000, **kwargs):
 
     data_hist_norm = np.copy(data_hist.values)
     data_hist_Entries = np.sum(data_hist_norm)
-    ref_hist_Entries = np.mean(np.sum(ref_hists_list))
+    ref_hist_Entries = np.mean(np.sum(ref_hist_list))
 
 
     ## calculate the ref arrays 
-    ref_hist_arr = np.array(ref_hists_list)
-    ref_hist_errs = np.std(ref_hist_arr, axis=0)
-    ref_hist_norm = np.mean(ref_hist_arr, axis=0)
-    ref_hist_scale = 1#/ref_hist_norm.sum()
-    ref_hist_norm*=ref_hist_scale
-    ref_hist_errs*=ref_hist_scale
+    ref_hist_arr = np.array(ref_hist_list)
+    ref_hist_norm = ref_hist_arr.mean(axis=0)
+    '''ref_hist_arr = np.array([x*ref_hist_norm.sum()/x.sum() for x in ref_hist_list])'''
+    ref_hist_errs = ref_hist_arr.std(axis=0)
+
+
     
     ## data arrays
-    data_hist_scale = ref_hist_norm.sum()/data_hist_norm.sum()
-    data_hist_norm*=data_hist_scale
+    '''data_hist_scale = ref_hist_norm.sum()/data_hist_norm.sum()
+    data_hist_norm*=data_hist_scale'''
     # data_hist_errs = np.sqrt(data_hist_norm*data_hist_scale)
     data_hist_errs = np.nan_to_num(abs(np.array(scipy.stats.chi2.interval(0.6827, 2 * data_hist_norm)) / 2 - 1 - data_hist_norm))
 
@@ -231,3 +231,5 @@ def draw_same(data_hist, data_run, ref_hist, ref_run):
     artifacts = [data_hist, data_text] 
     #artifacts = [data_hist, ref_hist, data_text, ref_text]
     return c, artifacts
+
+
