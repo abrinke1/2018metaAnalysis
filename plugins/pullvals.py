@@ -22,41 +22,62 @@ def pullvals(histpair,
     """Can handle poisson driven TH2s or generic TProfile2Ds"""
     data_hist = histpair.data_hist
     # ref_hist = histpair.ref_hist
-    ref_hists_list = histpair.ref_hists_list
+    ref_hist_list = histpair.ref_hists_list
     
     if not "2" in str(type(data_hist)): #or not "2" in str(type(ref_hist)):
         return None
-    for i in ref_hists_list:
+    for i in ref_hist_list:
         if i.values.sum() == 0:
             return None
 
     data_hist_norm = np.copy(data_hist.values)
     #ref_hist_norm = np .copy(ref_hist.values())
-    ref_hists_list_norm = [np.copy(x.values)*data_hist_norm.sum()/x.values.sum() for x in ref_hists_list]
+    ref_hist_list_norm = [np.copy(x.values) for x in ref_hist_list]
 
     ## Clone data_hist array to create pull_hist array to be filled later
     pull_hist = np.copy(data_hist_norm)
 
     data_hist_Entries = np.sum(data_hist_norm)
-    ref_hist_Entries = np.mean(np.sum(ref_hists_list))
+    ref_hist_Entries = np.mean(np.sum(ref_hist_list))
 
     # Reject empty histograms
     is_good = data_hist_Entries != 0 # and data_hist.GetEntries() >= min_entries
     
     
     ## calculate the ref arrays 
-    ref_hist_arr = np.array(ref_hists_list_norm)
+    ref_hist_arr = np.array(ref_hist_list_norm)
+    
+    ref_hist_arr = np.array([x*data_hist_norm.sum()/x.sum() if x.sum() > 0 else x for x in ref_hist_arr])
     ref_hist_norm = np.mean(ref_hist_arr, axis=0)
-    ''''ref_hist_arr = np.array([x*ref_hist_norm.sum()/x.sum() for x in ref_hist_arr])'''
     
     ref_hist_errs = np.std(ref_hist_arr, axis=0)
-    
+        
     
     ## data arrays
     '''data_hist_scale = ref_hist_norm.sum()/data_hist_norm.sum()
     data_hist_norm*=data_hist_scale'''
     # data_hist_errs = np.sqrt(data_hist_norm*data_hist_scale)
     data_hist_errs = np.nan_to_num(abs(np.array(scipy.stats.chi2.interval(0.6827, 2 * data_hist_norm)) / 2 - 1 - data_hist_norm))
+
+
+    import matplotlib.pyplot as plt
+    val = np.divide(ref_hist_errs, ref_hist_norm, out = np.zeros_like(ref_hist_errs), where=ref_hist_norm!=0)
+    fig, ax = plt.subplots()
+    im = ax.pcolormesh(val)
+    fig.colorbar(im)
+    ax.set_title(histpair.data_name + ' refErr/ref')
+    plt.show()
+    top = data_hist_errs[0]
+    bot =  data_hist_errs[1]
+    dataErr = top
+    dataErr[ref_hist_norm < data_hist_norm] = bot[ref_hist_norm < data_hist_norm]
+    val = np.divide(dataErr, data_hist_norm, out=np.zeros(data_hist_norm.shape), where=data_hist_norm!=0)
+    fig, ax = plt.subplots()
+    im = ax.pcolormesh(val)
+    fig.colorbar(im)
+    ax.set_title(histpair.data_name + ' dataErr/data')
+    plt.show()
+    plt.close('all')
 
     max_pull = 0
     nBins = 0

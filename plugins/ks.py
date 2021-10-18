@@ -25,7 +25,10 @@ def ks(histpair, ks_cut=0.09, min_entries=100000, **kwargs):
 
 
     data_hist = histpair.data_hist
-    ref_hist_list = [x.values*data_hist.values.sum()/x.values.sum() for x in histpair.ref_hists_list]
+    ref_hist_list = [x.values for x in histpair.ref_hists_list]
+    
+    
+    
     #ref_hists_list = [x.values for x in histpair.ref_hists_list]
 
     # check for 1d hists and that refs are not empty
@@ -45,8 +48,9 @@ def ks(histpair, ks_cut=0.09, min_entries=100000, **kwargs):
 
     ## calculate the ref arrays 
     ref_hist_arr = np.array(ref_hist_list)
+    
+    ref_hist_arr = np.array([x*data_hist_norm.sum()/x.sum() if x.sum() > 0 else x for x in ref_hist_list])
     ref_hist_norm = ref_hist_arr.mean(axis=0)
-    '''ref_hist_arr = np.array([x*ref_hist_norm.sum()/x.sum() for x in ref_hist_list])'''
     ref_hist_errs = ref_hist_arr.std(axis=0)
 
 
